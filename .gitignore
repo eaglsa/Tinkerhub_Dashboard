@@ -1,0 +1,18 @@
+# Python environment (Don't push your local venv)
+.venv/
+venv/
+env/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.pyc
+
+# Django local database (everyone should have their own local copy)
+db.sqlite3
+
+# Environment variables file (contains your secrets)
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
