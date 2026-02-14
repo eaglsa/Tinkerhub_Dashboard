@@ -2,5 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.get_dashboard_data, name='dashboard_index'),
+    path('', views.your_dashboard_view, name='dashboard_index'),
+
 ]

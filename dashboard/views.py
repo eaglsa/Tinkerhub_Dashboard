@@ -5,19 +5,25 @@ import io
 import random
 import hashlib
 from django.shortcuts import render
+from dotenv import load_dotenv
+
+
+load_dotenv() # This is the "switch" that turns on the .env file
+
 
 # Placeholder for Google Sheets CSV URL
 # You can replace this with the actual URL from the user or configuration
 
 # Placeholder for the Google Sheet URL
 GOOGLE_SHEET_CSV_URL = os.getenv('GSHEET_URL')
+SETTINGS_SHEET_URL = os.getenv('GOOGLE_SHEETS_SETTINGS') # Moved to Global
 
 import hashlib
 
 def generate_tech_alias(name):
     # Normalize the name to handle accidental spaces or case changes
     clean_name = name.strip().lower()
-    suffixes = [".sh", ".exe", "_v2.0", "0x_dev", ".py"]
+    suffixes = [".sh", ".exe", "_v2.0", "0x_dev", ".py",".js",".html",".css",".php",".c",]
     
     # Generate a stable number from the name using MD5
     # This number will NEVER change for the same string
@@ -32,11 +38,70 @@ def generate_tech_alias(name):
 def generate_avatar_url(alias):
     # Use the alias directly as the seed for DiceBear
     # No extra hashing needed if the alias is already stable
-    return f"https://api.dicebear.com/9.x/bottts/svg?seed={alias}"
+    return f"https://api.dicebear.com/9.x/adventurer-neutral/svg?seed={alias}"
 
-def get_dashboard_data(request):
+# views.py
+def your_dashboard_view(request):
+    # 1. Fetch Participant Data from Google Sheets
+    participants = fetch_participants() 
+    
+    # 2. Fetch Settings Data (Event Name, BG URL, etc.)
+    settings_data = get_settings_from_sheets() 
+
+    # 3. Convert settings list to a clean dictionary
+    # Turns rows like [{'Key': 'event_name', 'Value': 'TinkerHack'}] 
+    # into {'event_name': 'TinkerHack'}
+    config = settings_data[0] if settings_data else {}
+
+    # 4. Fix Google Drive URL for Background Image
+    # Ensures the drive link is a direct stream so it renders on the TV
+    # 4. Fix Google Drive URL for Background Image
+    # 4. Bulletproof Background Logic
+        
+    file_id = config.get('bg_url', '').strip()
+
+    # 4. Simple Background Image Logic
+    # Just gets the URL exactly as it is in the Google Sheet
+    config['bg_url'] = config.get('bg_url', '').strip()
+    # 5. Calculate Live Counts
+    m_count = 0
+    l_count = 0
+    for p in participants:
+        role = str(p.get('role', '')).strip().lower()
+        if role == 'mentor':
+            m_count += 1
+        else:
+            l_count += 1
+
+    # 6. Combined Context for the Template
+    context = {
+        'participants': participants,
+        'config': config,
+        'mentor_count': m_count,
+        'learner_count': l_count,
+    }
+    
+    return render(request, 'dashboard/index.html', context)
+
+# 1. DEFINE THE UTILITY FUNCTION (Best in views.py for now to save time)
+def get_settings_from_sheets():
+    # Replace with your actual 'Settings' tab published CSV URL
+    url = SETTINGS_SHEET_URL
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        decoded_content = response.content.decode('utf-8')
+        cr = csv.DictReader(decoded_content.splitlines())
+        # Converts [{'Key': 'bg_url', 'Value': '...'}, ...] to a flat list
+        return list(cr)
+    except Exception as e:
+        print(f"Error fetching settings: {e}")
+        return []
+
+def fetch_participants():
     """
-    Fetches data from Google Sheet, transforms it, and renders the dashboard.
+    Fetches data from Google Sheet and transforms it.
+    Returns a list of participant dictionaries.
     """
     participants = []
     
@@ -47,6 +112,9 @@ def get_dashboard_data(request):
 
     try:
         # In a real scenario, we would stream this or cache it
+        if not GOOGLE_SHEET_CSV_URL:
+             raise ValueError("GOOGLE_SHEET_CSV_URL not set")
+
         response = requests.get(GOOGLE_SHEET_CSV_URL)
         response.raise_for_status()
         
@@ -72,7 +140,7 @@ def get_dashboard_data(request):
                 'domain': domain,
             })
             
-    except requests.RequestException as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"Error fetching data: {e}")
         # Fallback data for demonstration/sanity check if fetch fails
         participants = [
@@ -81,4 +149,5 @@ def get_dashboard_data(request):
              {'name': 'Charlie Day', 'alias': 'sudo_charlie', 'avatar': generate_avatar_url('sudo_charlie'), 'role': 'Designer', 'domain': 'UI/UX'},
         ]
 
-    return render(request, 'dashboard/index.html', {'participants': participants})
+    return participants
+

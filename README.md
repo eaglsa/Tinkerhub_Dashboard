@@ -4,7 +4,7 @@ A Django-based dashboard application that fetches participant data from a Google
 
 ## Features
 
-- **Google Sheets Integration**: Fetches real-time participant data (Name, Role, Domain) from a public Google Sheet CSV.
+- **Google Sheets Integration**: Fetches real-time participant and settings data from public Google Sheet CSVs.
 - **Tech Aliases**: Automatically generates consistent, tech-inspired aliases (e.g., `name.sh`, `0xname`) from user names.
 - **Avatars**: Generates unique robot avatars using the DiceBear API based on the alias.
 - **Easter Egg**: Includes a hidden "antigravity" easter egg in the code.
@@ -51,9 +51,15 @@ A Django-based dashboard application that fetches participant data from a Google
     # Security key for Django (keep this secret in production)
     DJANGO_SECRET_KEY=django-insecure-your-secret-key-here
 
-    # URL to the published Google Sheet CSV
+    # URL to the published Google Sheet CSV for Participants
+    # Columns expected: Name, Role, Domain
     # Example: https://docs.google.com/spreadsheets/d/e/.../pub?output=csv
     GSHEET_URL=https://docs.google.com/spreadsheets/d/your-sheet-id/pub?output=csv
+
+    # URL to the published Google Sheet CSV for Settings
+    # Columns expected: Key, Value
+    # Example keys: event_name, bg_url
+    GOOGLE_SHEETS_SETTINGS=https://docs.google.com/spreadsheets/d/your-settings-sheet-id/pub?output=csv
     ```
 
 ## Database Setup
@@ -75,12 +81,24 @@ python manage.py migrate
 2.  **Access the dashboard:**
     Open your browser and navigate to `http://127.0.0.1:8000/`.
 
+## Verification
+
+To verify that the application is running correctly and returning expected data (including checking for the easter egg and fallback data), you can run the included verification script:
+
+```bash
+python verify.py
+# or for more detailed checks
+python verify_fix.py
+```
+
 ## Logic Overview
 
 -   **Alias Generation**: The `generate_tech_alias` function in `dashboard/views.py` creates a deterministic tech-themed suffix for each name.
 -   **Avatar Generation**: The `generate_avatar_url` function uses the generated alias as a seed for the DiceBear Bottts style.
+-   **Data Fetching**: Data is fetched from Google Sheets via the URLs configured in `.env`. If fetching fails, fallback data is used for demonstration.
 
 ## Troubleshooting
 
--   **Missing Data**: Ensure your `GSHEET_URL` is correct and the Google Sheet is published to the web as a CSV.
+-   **Missing Data**: Ensure your `GSHEET_URL` and `GOOGLE_SHEETS_SETTINGS` are correct and the Google Sheets are published to the web as CSV.
 -   **Environment Variables**: Make sure `.env` is in the root directory and you have restarted the server after making changes to it.
+-   **Dependencies**: Ensure all requirements are installed in your virtual environment.

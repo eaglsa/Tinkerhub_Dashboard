@@ -3,69 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TinkerHub Campus Dashboard</title>
+    <title>TinkerHub // Live Feed</title>
+    <link rel="icon" type="image/png" href="{{ config.logo_url|default:'https://i.postimg.cc/MKrCP0QR/i-Stock-1371551897.webp' }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        .tech-card {
-            transition: all 0.3s ease;
+        body { font-family: 'Public Sans', sans-serif; background-color: #F3F3F3; }
+        .brutal-shadow { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
+        .brutal-shadow-sm { box-shadow: 5px 5px 0px 0px rgba(0,0,0,1); }
+        .vertical-text { writing-mode: vertical-lr; transform: rotate(180deg); }
+        
+        /* Fixed sizing for Learner Cards */
+        .learner-card-fixed {
+            width: 170px; /* Increased slightly for better spacing */
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
         }
-        .tech-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+        .avatar-square {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border: 4px solid black;
+            background-color: #fff;
         }
+
+        /* Smooth hover transition */
+        .brutal-hover { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .brutal-hover:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px 0px rgba(0,0,0,1) !important;
+        }
+        /* Default Label States */
+        .section-label {
+            transition: color 0.4s ease, opacity 0.4s ease;
+        }
+
+        /* Focused State: Black & Bold */
+        .section-label-active {
+            color: #000000 !important;
+            opacity: 1 !important;
+        }
+
+        /* Unfocused State: Light Gray */
+        .label-inactive {
+            color: #D1D5DB !important; /* tailwind gray-300 */
+            opacity: 0.5;
+        }
+        @keyframes shadow-only-cycle {
+        0% { /* Bottom Right */
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1) !important;
+        }
+        25% { /* Bottom Left */
+            box-shadow: -8px 8px 0px 0px rgba(0,0,0,1) !important;
+        }
+        50% { /* Top Left */
+            box-shadow: -8px -8px 0px 0px rgba(0,0,0,1) !important;
+        }
+        75% { /* Top Right */
+            box-shadow: 8px -8px 0px 0px rgba(0,0,0,1) !important;
+        }
+        100% { /* Back to Bottom Right */
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1) !important;
+        }
+    }
+
+    .animate-brutal {
+        /* Ensure the box stays put */
+        transform: none !important; 
+        /* 'step-end' makes the shadow snap instantly between corners */
+        animation: shadow-only-cycle 2s infinite step-end !important;
+    }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-mono min-h-screen flex flex-col">
+<body class="text-black min-h-screen p-8 lg:p-12">
 
-    <header class="p-6 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-10">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-green-400">&lt;TinkerHub_Dashboard /&gt;</h1>
-            <div class="text-sm text-gray-400">Status: <span class="text-green-500">ONLINE</span></div>
+    <header class="flex justify-between items-start mb-16 border-b-8 border-black pb-8">
+        <div class="flex flex-col">
+             <div class="flex items-center gap-3 mb-4">
+                <span class="text-red-600 animate-pulse text-3xl">●</span>
+                <h2 class="text-2xl font-black uppercase tracking-tighter">
+                    Live Feed <span id="live-timestamp" class="text-gray-400 ml-6">Loading...</span>
+                </h2>
+            </div>
+            <h1 class="text-7xl font-black uppercase tracking-tighter leading-none">
+                {{ config.event_name }} // {{ config.location }}
+            </h1>
+        </div>
+        
+        <div class="border-8 border-black bg-white p-5 brutal-shadow animate-brutal">
+            <span  class="font-black text-3xl tracking-tighter">TINKERHUB</span>
         </div>
     </header>
 
-    <main class="container mx-auto p-6 flex-grow">
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {% for participant in participants %}
-            <div class="tech-card bg-gray-800 border border-gray-700 rounded-lg p-6 relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                </div>
-                
-                <div class="flex flex-col items-center mb-4">
-                    <div class="h-24 w-24 rounded-full bg-gray-700 p-1 border-2 border-green-500/30 mb-3">
-                        <img src="{{ participant.avatar }}" alt="{{ participant.alias }}" class="h-full w-full rounded-full bg-gray-800">
-                    </div>
-                    <h2 class="text-xl font-bold text-white mb-1">{{ participant.alias }}</h2>
-                    <p class="text-xs text-green-400 font-mono">{{ participant.name }}</p>
-                </div>
-                
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between border-b border-gray-700 pb-1">
-                        <span class="text-gray-500">Role:</span>
-                        <span class="text-gray-300">{{ participant.role }}</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-700 pb-1">
-                        <span class="text-gray-500">Domain:</span>
-                        <span class="text-gray-300">{{ participant.domain }}</span>
+    <main class="space-y-24"> <section class="flex gap-12">
+            <section id="mentors-section" class="flex gap-12">
+                <div class="flex flex-col items-center border-r-8 border-black pr-10">
+                    <h2 id="mentor-text" class="section-label label-active vertical-text text-6xl font-black uppercase tracking-tight">
+                        Mentors
+                    </h2>
+                    <div class="mt-6 bg-black text-white rounded-full w-14 h-14 flex items-center justify-center text-2xl font-bold border-4 border-black">
+                        {{ mentor_count }}
                     </div>
                 </div>
+                </section>
+
+            <div class="flex flex-wrap grid-cols-4 gap-10 flex-1"> {% for participant in participants %}
+                    {% if participant.role|lower == 'mentor' %}
+                    <div class="bg-yellow-400 border-4 border-black p-5 w-56 brutal-shadow brutal-hover cursor-pointer">
+                        <div class="avatar-square mb-4 overflow-hidden">
+                            <img src="{{ participant.avatar }}" alt="{{ participant.alias }}" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="font-black text-xl uppercase border-b-4 border-black mb-2 truncate">{{ participant.alias }}</h3>
+                        <p class="text-base font-bold text-black/80 italic">{{ participant.domain }}</p>
+                        <p class="text-xs font-black uppercase bg-black text-white inline-block px-2 py-1 mt-4">Building a Project</p>
+                    </div>
+                    {% endif %}
+                {% endfor %}
             </div>
-            {% empty %}
-             <div class="col-span-full text-center py-20 text-gray-500">
-                &lt;No participants found /&gt;
+        </section>
+
+        <section class="flex gap-12 pt-12">
+            <section id="learners-section" class="flex gap-12 pt-1">
+                <div class="flex flex-col items-center border-r-8 border-black pr-10">
+                    <h2 id="learner-text" class="section-label label-inactive vertical-text text-6xl font-black uppercase tracking-tight">
+                        Learners
+                    </h2>
+                    <div class="mt-6 bg-white text-black rounded-full w-14 h-14 flex items-center justify-center text-2xl font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        {{ learner_count }}
+                    </div>
+                </div>
+                </section>
+
+            <div class="flex flex-wrap gap-10 flex-1 items-start"> {% for participant in participants %}
+                    {% if participant.role|lower != 'mentor' %}
+                    <div class="learner-card-fixed bg-white border-4 border-black p-3 brutal-shadow-sm brutal-hover cursor-pointer">
+                        <div class="avatar-square overflow-hidden mb-3">
+                            <img src="{{ participant.avatar }}" alt="{{ participant.alias }}" class="w-full h-full object-cover">
+                        </div>
+                        
+                        <div class="min-w-0">
+                            <h3 class="font-black text-sm uppercase truncate border-b-2 border-black pb-1">
+                                {{ participant.alias }}
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-[10px] font-bold text-gray-600 truncate uppercase leading-tight">{{ participant.domain }}</p>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Self Learning</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
+        </section>
+
     </main>
 
-    <footer class="p-6 border-t border-gray-800 text-center text-xs text-gray-600">
-        <p>&copy; 2024 TinkerHub Foundation. All systems nominal.</p>
-        <!-- import antigravity -->
-        <p class="mt-2 text-gray-800 hover:text-gray-700 transition-colors cursor-default select-none" title="xkcd.com/353">import antigravity</p>
+    <footer class="mt-32 border-t-8 border-black pt-8 flex justify-between font-black text-lg uppercase tracking-widest">
+        <p>GEC Sreekrishnapuram </p>
+        <p>System Nominal // v1.0.4</p>
     </footer>
+<script>
+    function updateClock() {
+        const now = new Date();
+        
+        // Format Time: 1:25:01 PM
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // convert 0 to 12
+        
+        const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
 
+        // Format Date: DD/MM/YY
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        
+        const dateString = `${day}/${month}/${year}`;
+
+        // Combine and Inject
+        document.getElementById('live-timestamp').textContent = `${timeString} // ${dateString}`;
+    }
+
+    // Run immediately and then every second
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    
+    const mentorLabel = document.getElementById('mentor-text');
+    const learnerLabel = document.getElementById('learner-text');
+    const learnersSection = document.getElementById('learners-section');
+
+    const flipObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // FOCUS ON LEARNERS
+                learnerLabel.classList.add('label-active');
+                learnerLabel.classList.remove('label-inactive');
+                
+                mentorLabel.classList.add('label-inactive');
+                mentorLabel.classList.remove('label-active');
+            } else {
+                // FOCUS BACK TO MENTORS
+                mentorLabel.classList.add('label-active');
+                mentorLabel.classList.remove('label-inactive');
+                
+                learnerLabel.classList.add('label-inactive');
+                learnerLabel.classList.remove('label-active');
+            }
+        });
+    }, { threshold: 0.3 }); // Flip when 30% of learner section is visible
+
+    flipObserver.observe(learnersSection);
+
+</script>
 </body>
+    <div class="fixed inset-0 -z-10 overflow-hidden bg-white">
+        {% if config.bg_url %}
+            <img src="{{ config.bg_url }}" 
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                class="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
+                style="filter: blur(2px);">
+        {% endif %}
+    </div>
+
 </html>
